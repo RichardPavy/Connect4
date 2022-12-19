@@ -11,13 +11,6 @@ use super::tictactoe::Symbol;
 pub type Board = ArrayBoard<3, 3, Symbol>;
 
 impl Board {
-    pub fn all_points(&self) -> impl Iterator<Item = Point> {
-        let size = self.size();
-        (0..size.width())
-            .map(move |i| (0..size.height()).map(move |j| Point::new(i, j)))
-            .flatten()
-    }
-
     pub fn corners<'a>(&'a self) -> impl Iterator<Item = Point> + 'a {
         let bottom = (0..self.width()).map(|i| Point::new(i, 0));
         let top = (0..self.width()).map(|i| Point::new(i, self.height() - 1));
