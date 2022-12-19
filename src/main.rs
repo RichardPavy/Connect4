@@ -1,8 +1,28 @@
+use connect4::play::play_connect4;
+use tictactoe::play::play_tictactoe;
+
 mod connect4;
 mod shared;
+mod tictactoe;
 
 fn main() {
+    println!("Type 't' for TicTacToe or 'c' for Connect4");
     let difficulty = 1;
     let winning_tokens = 4;
-    connect4::play::play_connect4(difficulty, winning_tokens).unwrap()
+    loop {
+        let line = {
+            let mut line = String::new();
+            std::io::stdin().read_line(&mut line).unwrap();
+            line.trim().to_owned()
+        };
+        if line == "t" {
+            play_tictactoe().unwrap();
+            continue;
+        } else if line == "c" {
+            play_connect4(difficulty, winning_tokens).unwrap();
+            continue;
+        } else {
+            println!("Unexpected input '{}'", line);
+        }
+    }
 }
