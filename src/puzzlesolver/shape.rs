@@ -61,6 +61,20 @@ impl Shape {
         }
         self.size = Size::new(self.height(), self.width());
     }
+
+    pub fn mirror_x(&mut self) {
+        let width = self.width();
+        for point in &mut self.points {
+            point.x = width - point.x - 1;
+        }
+    }
+
+    pub fn mirror_y(&mut self) {
+        let height = self.height();
+        for point in &mut self.points {
+            point.y = height - point.y - 1;
+        }
+    }
 }
 
 impl BoardSize for Shape {
@@ -180,6 +194,34 @@ mod tests {
  #
  #
 ##
+",
+            "\n".to_string() + &shape.to_string()
+        );
+    }
+
+    #[test]
+    fn mirror_x() {
+        let mut shape = test_shape();
+        shape.mirror_x();
+        println!("{}", shape);
+        assert_eq!(
+            "
+###
+#  
+",
+            "\n".to_string() + &shape.to_string()
+        );
+    }
+
+    #[test]
+    fn mirror_y() {
+        let mut shape = test_shape();
+        shape.mirror_y();
+        println!("{}", shape);
+        assert_eq!(
+            "
+  #
+###
 ",
             "\n".to_string() + &shape.to_string()
         );
