@@ -6,7 +6,7 @@ use crate::shared::coord::point::Point;
 
 use super::colored_point::ColoredPoint;
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Shape {
     size: Size,
     points: Vec<ColoredPoint>,
@@ -26,7 +26,9 @@ impl Shape {
         let mut points = vec![];
         for (i, line) in sprite.lines().enumerate() {
             for (j, char) in line.char_indices() {
-                points.push(ColoredPoint::new(i as i32, j as i32, char));
+                if char != ' ' {
+                    points.push(ColoredPoint::new(i as i32, j as i32, char));
+                }
             }
         }
         return Self::new(points);
@@ -331,6 +333,26 @@ mod tests {
 ",
             "\n".to_owned() + &variants
         );
+    }
+
+    #[test]
+    fn parse() {
+        let sprite = "
+        ####
+        ###
+        ##
+        #";
+        let actual = Shape::parse(sprite);
+        let expected = {
+            let mut points = vec![];
+            for i in 0..4 {
+                for j in 0..(4 - i) {
+                    points.push(ColoredPoint::new(i, j, '#'));
+                }
+            }
+            Shape::new(points)
+        };
+        assert_eq!(expected, actual);
     }
 
     fn test_shape() -> Shape {
