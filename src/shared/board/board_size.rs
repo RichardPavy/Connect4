@@ -11,6 +11,7 @@ pub trait BoardSize {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Size {
     point: Point,
 }

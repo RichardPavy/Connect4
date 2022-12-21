@@ -2,6 +2,7 @@ use connect4::play::play_connect4;
 use tictactoe::play::play_tictactoe;
 
 mod connect4;
+mod puzzlesolver;
 mod shared;
 mod tictactoe;
 
