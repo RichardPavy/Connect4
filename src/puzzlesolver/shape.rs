@@ -22,6 +22,16 @@ impl Shape {
         return result;
     }
 
+    pub fn parse(sprite: &str) -> Self {
+        let mut points = vec![];
+        for (i, line) in sprite.lines().enumerate() {
+            for (j, char) in line.char_indices() {
+                points.push(ColoredPoint::new(i as i32, j as i32, char));
+            }
+        }
+        return Self::new(points);
+    }
+
     fn normalize(&mut self) {
         if self.points.is_empty() {
             self.size = Size::new(0, 0);
@@ -108,8 +118,8 @@ impl BoardSize for Shape {
 impl Display for Shape {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut buf = String::new();
-        for i in 0..self.width() {
-            for j in 0..self.height() {
+        for j in 0..self.height() {
+            for i in 0..self.width() {
                 if let Some(point) = self
                     .points
                     .iter()
@@ -183,8 +193,9 @@ mod tests {
         println!("{}", shape);
         assert_eq!(
             "
-#  
-###
+##
+ #
+ #
 ",
             "\n".to_string() + &shape.to_string()
         );
@@ -197,9 +208,8 @@ mod tests {
         println!("{}", shape);
         assert_eq!(
             "
-##
-# 
-# 
+###
+#  
 ",
             "\n".to_string() + &shape.to_string()
         );
@@ -212,9 +222,8 @@ mod tests {
         println!("{}", shape);
         assert_eq!(
             "
- #
- #
-##
+  #
+###
 ",
             "\n".to_string() + &shape.to_string()
         );
@@ -227,8 +236,9 @@ mod tests {
         println!("{}", shape);
         assert_eq!(
             "
-###
-#  
+##
+# 
+# 
 ",
             "\n".to_string() + &shape.to_string()
         );
@@ -241,8 +251,9 @@ mod tests {
         println!("{}", shape);
         assert_eq!(
             "
-  #
-###
+ #
+ #
+##
 ",
             "\n".to_string() + &shape.to_string()
         );
@@ -259,33 +270,33 @@ mod tests {
         println!("{}", variants);
         assert_eq!(
             "
-#  
-###
-
 ##
-# 
-# 
-
-###
-  #
-
  #
  #
-##
 
 ###
 #  
 
+# 
+# 
 ##
- #
- #
 
   #
 ###
 
-# 
-# 
 ##
+# 
+# 
+
+#  
+###
+
+ #
+ #
+##
+
+###
+  #
 ",
             "\n".to_owned() + &variants
         );
@@ -304,19 +315,19 @@ mod tests {
         println!("{}", variants);
         assert_eq!(
             "
-# #
+##
+ #
+##
+
 ###
+# #
 
 ##
 # 
 ##
 
-###
 # #
-
-##
- #
-##
+###
 ",
             "\n".to_owned() + &variants
         );
