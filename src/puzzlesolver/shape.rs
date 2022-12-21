@@ -11,7 +11,7 @@ pub struct Shape {
     points: Vec<ColoredPoint>,
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ColoredPoint {
     color: char,
     point: Point,
@@ -130,6 +130,7 @@ impl Shape {
         let mut result = vec![];
         for _ in 0..2 {
             for _ in 0..4 {
+                //shape.points.sort();
                 if !result.contains(&shape) {
                     result.push(shape.clone());
                 }
@@ -330,6 +331,51 @@ mod tests {
 ###
 
 # 
+# 
+##
+",
+            "\n".to_owned() + &variants
+        );
+    }
+
+    #[test]
+    fn variants2() {
+        let mut test_shape = test_shape();
+        test_shape.points.push(ColoredPoint::new_pound(0, 2));
+        let variants = test_shape
+            .variants()
+            .into_iter()
+            .map(|shape| shape.to_string())
+            .collect::<Vec<String>>()
+            .join("\n");
+        println!("{}", variants);
+        assert_eq!(
+            "
+# #
+###
+
+##
+# 
+##
+
+###
+# #
+
+##
+ #
+##
+
+###
+# #
+
+##
+ #
+##
+
+# #
+###
+
+##
 # 
 ##
 ",
