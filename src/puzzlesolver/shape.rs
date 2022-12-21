@@ -4,7 +4,7 @@ use crate::shared::board::board_size::BoardSize;
 use crate::shared::board::board_size::Size;
 use crate::shared::coord::point::Point;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Shape {
     size: Size,
     points: Vec<Point>,
@@ -74,6 +74,21 @@ impl Shape {
         for point in &mut self.points {
             point.y = height - point.y - 1;
         }
+    }
+
+    pub fn variants(&self) -> Vec<Shape> {
+        let mut shape = self.clone();
+        let mut result = vec![];
+        for _ in 0..2 {
+            for _ in 0..4 {
+                if !result.contains(&shape) {
+                    result.push(shape.clone());
+                }
+                shape.rotate_left();
+            }
+            shape.mirror_x();
+        }
+        result
     }
 }
 
@@ -224,6 +239,49 @@ mod tests {
 ###
 ",
             "\n".to_string() + &shape.to_string()
+        );
+    }
+
+    #[test]
+    fn variants() {
+        let variants = test_shape()
+            .variants()
+            .into_iter()
+            .map(|shape| shape.to_string())
+            .collect::<Vec<String>>()
+            .join("\n");
+        println!("{}", variants);
+        assert_eq!(
+            "
+#  
+###
+
+##
+# 
+# 
+
+###
+  #
+
+ #
+ #
+##
+
+###
+#  
+
+##
+ #
+ #
+
+  #
+###
+
+# 
+# 
+##
+",
+            "\n".to_owned() + &variants
         );
     }
 
