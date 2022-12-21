@@ -130,7 +130,7 @@ impl Shape {
         let mut result = vec![];
         for _ in 0..2 {
             for _ in 0..4 {
-                //shape.points.sort();
+                shape.points.sort();
                 if !result.contains(&shape) {
                     result.push(shape.clone());
                 }
@@ -363,20 +363,6 @@ mod tests {
 
 ##
  #
-##
-
-###
-# #
-
-##
- #
-##
-
-# #
-###
-
-##
-# 
 ##
 ",
             "\n".to_owned() + &variants
