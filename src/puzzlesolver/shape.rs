@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::fmt::Display;
 
 use crate::shared::board::board_size::BoardSize;
@@ -7,11 +8,59 @@ use crate::shared::coord::point::Point;
 #[derive(Clone, PartialEq, Eq)]
 pub struct Shape {
     size: Size,
-    points: Vec<Point>,
+    points: Vec<ColoredPoint>,
+}
+
+#[derive(Clone, PartialEq, Eq)]
+pub struct ColoredPoint {
+    color: char,
+    point: Point,
+}
+
+impl Debug for ColoredPoint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ColoredPoint")
+            .field("x", &self.x())
+            .field("y", &self.y())
+            .field("color", &self.color)
+            .finish()
+    }
+}
+
+impl ColoredPoint {
+    fn new(x: i32, y: i32, color: char) -> Self {
+        Self {
+            point: Point::new(x, y),
+            color,
+        }
+    }
+    fn new_pound(x: i32, y: i32) -> Self {
+        Self::new(x, y, '#')
+    }
+
+    pub fn color(&self) -> char {
+        self.color
+    }
+    pub fn x(&self) -> i32 {
+        self.point.x
+    }
+    pub fn y(&self) -> i32 {
+        self.point.y
+    }
+
+    pub fn color_mut(&mut self) -> &mut char {
+        &mut self.color
+    }
+    pub fn x_mut(&mut self) -> &mut i32 {
+        &mut self.point.x
+    }
+    pub fn y_mut(&mut self) -> &mut i32 {
+        &mut self.point.y
+    }
 }
 
 impl Shape {
-    pub fn new(points: Vec<Point>) -> Self {
+    pub fn new(points: Vec<ColoredPoint>) -> Self {
         let mut result = Self {
             size: Size::new(0, 0),
             points,
@@ -30,10 +79,10 @@ impl Shape {
         let mut max_x = i32::MIN;
         let mut max_y = i32::MIN;
         for point in &self.points {
-            min_x = min_x.min(point.x);
-            min_y = min_y.min(point.y);
-            max_x = max_x.max(point.x);
-            max_y = max_y.max(point.y);
+            min_x = min_x.min(point.x());
+            min_y = min_y.min(point.y());
+            max_x = max_x.max(point.x());
+            max_y = max_y.max(point.y());
         }
         self.translate(Point::new(-min_x, -min_y));
         self.size = Size::new(max_x - min_x + 1, max_y - min_y + 1);
@@ -41,15 +90,15 @@ impl Shape {
 
     fn translate(&mut self, direction: Point) {
         for point in &mut self.points {
-            point.x += direction.x;
-            point.y += direction.y;
+            *point.x_mut() += direction.x;
+            *point.y_mut() += direction.y;
         }
     }
 
     pub fn rotate_left(&mut self) {
         let width = self.width();
         for point in &mut self.points {
-            (point.x, point.y) = (point.y, width - point.x - 1);
+            (*point.x_mut(), *point.y_mut()) = (point.y(), width - point.x() - 1);
         }
         self.size = Size::new(self.height(), self.width());
     }
@@ -57,7 +106,7 @@ impl Shape {
     pub fn rotate_right(&mut self) {
         let height = self.height();
         for point in &mut self.points {
-            (point.x, point.y) = (height - point.y - 1, point.x);
+            (*point.x_mut(), *point.y_mut()) = (height - point.y() - 1, point.x());
         }
         self.size = Size::new(self.height(), self.width());
     }
@@ -65,14 +114,14 @@ impl Shape {
     pub fn mirror_x(&mut self) {
         let width = self.width();
         for point in &mut self.points {
-            point.x = width - point.x - 1;
+            *point.x_mut() = width - point.x() - 1;
         }
     }
 
     pub fn mirror_y(&mut self) {
         let height = self.height();
         for point in &mut self.points {
-            point.y = height - point.y - 1;
+            *point.y_mut() = height - point.y() - 1;
         }
     }
 
@@ -107,8 +156,12 @@ impl Display for Shape {
         let mut buf = String::new();
         for i in 0..self.width() {
             for j in 0..self.height() {
-                if self.points.contains(&Point::new(i, j)) {
-                    buf.push('#');
+                if let Some(point) = self
+                    .points
+                    .iter()
+                    .find(|point| point.x() == i && point.y() == j)
+                {
+                    buf.push(point.color());
                 } else {
                     buf.push(' ');
                 }
@@ -123,10 +176,9 @@ impl Display for Shape {
 mod tests {
     use std::vec;
 
+    use crate::puzzlesolver::shape::ColoredPoint;
     use crate::shared::board::board_size::BoardSize;
     use crate::shared::board::board_size::Size;
-    use crate::shared::coord::point::Point;
-    use crate::shared::coord::Coord;
 
     use super::Shape;
 
@@ -143,10 +195,10 @@ mod tests {
         assert_eq!(
             shape.points,
             vec![
-                Coord { x: 0, y: 0 },
-                Coord { x: 1, y: 0 },
-                Coord { x: 1, y: 1 },
-                Coord { x: 1, y: 2 },
+                ColoredPoint::new_pound(0, 0),
+                ColoredPoint::new_pound(1, 0),
+                ColoredPoint::new_pound(1, 1),
+                ColoredPoint::new_pound(1, 2),
             ]
         );
     }
@@ -154,19 +206,19 @@ mod tests {
     #[test]
     fn new_negative_points() {
         let shape = Shape::new(vec![
-            Point::new(2 - 10, 3 - 10),
-            Point::new(3 - 10, 3 - 10),
-            Point::new(3 - 10, 4 - 10),
-            Point::new(3 - 10, 5 - 10),
+            ColoredPoint::new_pound(2 - 10, 3 - 10),
+            ColoredPoint::new_pound(3 - 10, 3 - 10),
+            ColoredPoint::new_pound(3 - 10, 4 - 10),
+            ColoredPoint::new_pound(3 - 10, 5 - 10),
         ]);
         assert_eq!(shape.size(), Size::new(2, 3));
         assert_eq!(
             shape.points,
             vec![
-                Coord { x: 0, y: 0 },
-                Coord { x: 1, y: 0 },
-                Coord { x: 1, y: 1 },
-                Coord { x: 1, y: 2 },
+                ColoredPoint::new_pound(0, 0),
+                ColoredPoint::new_pound(1, 0),
+                ColoredPoint::new_pound(1, 1),
+                ColoredPoint::new_pound(1, 2),
             ]
         );
     }
@@ -287,10 +339,10 @@ mod tests {
 
     fn test_shape() -> Shape {
         Shape::new(vec![
-            Point::new(2, 3),
-            Point::new(3, 3),
-            Point::new(3, 4),
-            Point::new(3, 5),
+            ColoredPoint::new_pound(2, 3),
+            ColoredPoint::new_pound(3, 3),
+            ColoredPoint::new_pound(3, 4),
+            ColoredPoint::new_pound(3, 5),
         ])
     }
 }
