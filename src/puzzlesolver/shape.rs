@@ -1,62 +1,15 @@
-use std::fmt::Debug;
 use std::fmt::Display;
 
 use crate::shared::board::board_size::BoardSize;
 use crate::shared::board::board_size::Size;
 use crate::shared::coord::point::Point;
 
+use super::colored_point::ColoredPoint;
+
 #[derive(Clone, PartialEq, Eq)]
 pub struct Shape {
     size: Size,
     points: Vec<ColoredPoint>,
-}
-
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct ColoredPoint {
-    color: char,
-    point: Point,
-}
-
-impl Debug for ColoredPoint {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ColoredPoint")
-            .field("x", &self.x())
-            .field("y", &self.y())
-            .field("color", &self.color)
-            .finish()
-    }
-}
-
-impl ColoredPoint {
-    fn new(x: i32, y: i32, color: char) -> Self {
-        Self {
-            point: Point::new(x, y),
-            color,
-        }
-    }
-    fn new_pound(x: i32, y: i32) -> Self {
-        Self::new(x, y, '#')
-    }
-
-    pub fn color(&self) -> char {
-        self.color
-    }
-    pub fn x(&self) -> i32 {
-        self.point.x
-    }
-    pub fn y(&self) -> i32 {
-        self.point.y
-    }
-
-    pub fn color_mut(&mut self) -> &mut char {
-        &mut self.color
-    }
-    pub fn x_mut(&mut self) -> &mut i32 {
-        &mut self.point.x
-    }
-    pub fn y_mut(&mut self) -> &mut i32 {
-        &mut self.point.y
-    }
 }
 
 impl Shape {
