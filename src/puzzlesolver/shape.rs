@@ -4,19 +4,19 @@ use crate::shared::board::board_size::BoardSize;
 use crate::shared::board::board_size::Size;
 use crate::shared::coord::point::Point;
 
-use super::colored_point::ColoredPoint;
+use super::tagged_point::TaggedPoint;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Shape {
-    size: Size,
-    points: Vec<ColoredPoint>,
+    pub size: Size,
+    pub tagged_points: Vec<TaggedPoint>,
 }
 
 impl Shape {
-    pub fn new(points: Vec<ColoredPoint>) -> Self {
+    pub fn new(points: Vec<TaggedPoint>) -> Self {
         let mut result = Self {
             size: Size::new(0, 0),
-            points,
+            tagged_points: points,
         };
         result.normalize();
         return result;
@@ -27,7 +27,7 @@ impl Shape {
         for (i, line) in sprite.lines().enumerate() {
             for (j, char) in line.char_indices() {
                 if char != ' ' {
-                    points.push(ColoredPoint::new(i as i32, j as i32, char));
+                    points.push(TaggedPoint::new(i as i32, j as i32, char));
                 }
             }
         }
@@ -35,7 +35,7 @@ impl Shape {
     }
 
     fn normalize(&mut self) {
-        if self.points.is_empty() {
+        if self.tagged_points.is_empty() {
             self.size = Size::new(0, 0);
             return;
         }
@@ -43,18 +43,18 @@ impl Shape {
         let mut min_y = i32::MAX;
         let mut max_x = i32::MIN;
         let mut max_y = i32::MIN;
-        for point in &self.points {
+        for point in &self.tagged_points {
             min_x = min_x.min(point.x());
             min_y = min_y.min(point.y());
             max_x = max_x.max(point.x());
             max_y = max_y.max(point.y());
         }
-        self.translate(Point::new(-min_x, -min_y));
+        self.translate(&Point::new(-min_x, -min_y));
         self.size = Size::new(max_x - min_x + 1, max_y - min_y + 1);
     }
 
-    fn translate(&mut self, direction: Point) {
-        for point in &mut self.points {
+    pub fn translate(&mut self, direction: &Point) {
+        for point in &mut self.tagged_points {
             *point.x_mut() += direction.x;
             *point.y_mut() += direction.y;
         }
@@ -62,7 +62,7 @@ impl Shape {
 
     pub fn rotate_left(&mut self) {
         let width = self.width();
-        for point in &mut self.points {
+        for point in &mut self.tagged_points {
             (*point.x_mut(), *point.y_mut()) = (point.y(), width - point.x() - 1);
         }
         self.size = Size::new(self.height(), self.width());
@@ -70,7 +70,7 @@ impl Shape {
 
     pub fn rotate_right(&mut self) {
         let height = self.height();
-        for point in &mut self.points {
+        for point in &mut self.tagged_points {
             (*point.x_mut(), *point.y_mut()) = (height - point.y() - 1, point.x());
         }
         self.size = Size::new(self.height(), self.width());
@@ -78,14 +78,14 @@ impl Shape {
 
     pub fn mirror_x(&mut self) {
         let width = self.width();
-        for point in &mut self.points {
+        for point in &mut self.tagged_points {
             *point.x_mut() = width - point.x() - 1;
         }
     }
 
     pub fn mirror_y(&mut self) {
         let height = self.height();
-        for point in &mut self.points {
+        for point in &mut self.tagged_points {
             *point.y_mut() = height - point.y() - 1;
         }
     }
@@ -95,7 +95,7 @@ impl Shape {
         let mut result = vec![];
         for _ in 0..2 {
             for _ in 0..4 {
-                shape.points.sort();
+                shape.tagged_points.sort();
                 if !result.contains(&shape) {
                     result.push(shape.clone());
                 }
@@ -123,7 +123,7 @@ impl Display for Shape {
         for j in 0..self.height() {
             for i in 0..self.width() {
                 if let Some(point) = self
-                    .points
+                    .tagged_points
                     .iter()
                     .find(|point| point.x() == i && point.y() == j)
                 {
@@ -142,7 +142,7 @@ impl Display for Shape {
 mod tests {
     use std::vec;
 
-    use crate::puzzlesolver::shape::ColoredPoint;
+    use crate::puzzlesolver::shape::TaggedPoint;
     use crate::shared::board::board_size::BoardSize;
     use crate::shared::board::board_size::Size;
 
@@ -159,12 +159,12 @@ mod tests {
         let shape = test_shape();
         assert_eq!(shape.size(), Size::new(2, 3));
         assert_eq!(
-            shape.points,
+            shape.tagged_points,
             vec![
-                ColoredPoint::new_pound(0, 0),
-                ColoredPoint::new_pound(1, 0),
-                ColoredPoint::new_pound(1, 1),
-                ColoredPoint::new_pound(1, 2),
+                TaggedPoint::new_pound(0, 0),
+                TaggedPoint::new_pound(1, 0),
+                TaggedPoint::new_pound(1, 1),
+                TaggedPoint::new_pound(1, 2),
             ]
         );
     }
@@ -172,19 +172,19 @@ mod tests {
     #[test]
     fn new_negative_points() {
         let shape = Shape::new(vec![
-            ColoredPoint::new_pound(2 - 10, 3 - 10),
-            ColoredPoint::new_pound(3 - 10, 3 - 10),
-            ColoredPoint::new_pound(3 - 10, 4 - 10),
-            ColoredPoint::new_pound(3 - 10, 5 - 10),
+            TaggedPoint::new_pound(2 - 10, 3 - 10),
+            TaggedPoint::new_pound(3 - 10, 3 - 10),
+            TaggedPoint::new_pound(3 - 10, 4 - 10),
+            TaggedPoint::new_pound(3 - 10, 5 - 10),
         ]);
         assert_eq!(shape.size(), Size::new(2, 3));
         assert_eq!(
-            shape.points,
+            shape.tagged_points,
             vec![
-                ColoredPoint::new_pound(0, 0),
-                ColoredPoint::new_pound(1, 0),
-                ColoredPoint::new_pound(1, 1),
-                ColoredPoint::new_pound(1, 2),
+                TaggedPoint::new_pound(0, 0),
+                TaggedPoint::new_pound(1, 0),
+                TaggedPoint::new_pound(1, 1),
+                TaggedPoint::new_pound(1, 2),
             ]
         );
     }
@@ -307,7 +307,7 @@ mod tests {
     #[test]
     fn variants2() {
         let mut test_shape = test_shape();
-        test_shape.points.push(ColoredPoint::new_pound(0, 2));
+        test_shape.tagged_points.push(TaggedPoint::new_pound(0, 2));
         let variants = test_shape
             .variants()
             .into_iter()
@@ -347,7 +347,7 @@ mod tests {
             let mut points = vec![];
             for i in 0..4 {
                 for j in 0..(4 - i) {
-                    points.push(ColoredPoint::new(i, j, '#'));
+                    points.push(TaggedPoint::new(i, j, '#'));
                 }
             }
             Shape::new(points)
@@ -357,10 +357,10 @@ mod tests {
 
     fn test_shape() -> Shape {
         Shape::new(vec![
-            ColoredPoint::new_pound(2, 3),
-            ColoredPoint::new_pound(3, 3),
-            ColoredPoint::new_pound(3, 4),
-            ColoredPoint::new_pound(3, 5),
+            TaggedPoint::new_pound(2, 3),
+            TaggedPoint::new_pound(3, 3),
+            TaggedPoint::new_pound(3, 4),
+            TaggedPoint::new_pound(3, 5),
         ])
     }
 }

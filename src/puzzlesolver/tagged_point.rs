@@ -3,12 +3,12 @@ use std::fmt::Debug;
 use crate::shared::coord::point::Point;
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct ColoredPoint {
+pub struct TaggedPoint {
     color: char,
     point: Point,
 }
 
-impl Debug for ColoredPoint {
+impl Debug for TaggedPoint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ColoredPoint")
             .field("x", &self.x())
@@ -18,7 +18,7 @@ impl Debug for ColoredPoint {
     }
 }
 
-impl ColoredPoint {
+impl TaggedPoint {
     pub fn new(x: i32, y: i32, color: char) -> Self {
         Self {
             point: Point::new(x, y),
@@ -37,6 +37,9 @@ impl ColoredPoint {
     }
     pub fn y(&self) -> i32 {
         self.point.y
+    }
+    pub fn as_point(&self) -> &Point {
+        &self.point
     }
 
     pub fn color_mut(&mut self) -> &mut char {
