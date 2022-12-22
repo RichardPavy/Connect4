@@ -12,7 +12,10 @@ pub enum Solution {
 impl Display for Solution {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Solution::Solution(shapes) = self;
-        for (shape, at) in shapes {
+        for (i, (shape, at)) in shapes.iter().enumerate() {
+            if i != 0 {
+                writeln!(f)?;
+            };
             let board = Board::generate(|point| {
                 if let Some(color) = shape
                     .tagged_points
@@ -27,7 +30,6 @@ impl Display for Solution {
                 }
             });
             write!(f, "{}", board)?;
-            writeln!(f)?;
         }
         Ok(())
     }

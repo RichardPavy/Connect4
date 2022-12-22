@@ -42,9 +42,6 @@ impl TaggedPoint {
         &self.point
     }
 
-    pub fn color_mut(&mut self) -> &mut char {
-        &mut self.color
-    }
     pub fn x_mut(&mut self) -> &mut i32 {
         &mut self.point.x
     }

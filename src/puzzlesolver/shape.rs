@@ -199,7 +199,7 @@ mod tests {
  #
  #
 ",
-            "\n".to_string() + &shape.to_string()
+            format!("\n{}", shape)
         );
     }
 
@@ -213,7 +213,7 @@ mod tests {
 ###
 #  
 ",
-            "\n".to_string() + &shape.to_string()
+            format!("\n{}", shape)
         );
     }
 
@@ -227,7 +227,7 @@ mod tests {
   #
 ###
 ",
-            "\n".to_string() + &shape.to_string()
+            format!("\n{}", shape)
         );
     }
 
@@ -242,7 +242,7 @@ mod tests {
 # 
 # 
 ",
-            "\n".to_string() + &shape.to_string()
+            format!("\n{}", shape)
         );
     }
 
@@ -257,7 +257,7 @@ mod tests {
  #
 ##
 ",
-            "\n".to_string() + &shape.to_string()
+            format!("\n{}", shape)
         );
     }
 
@@ -300,7 +300,7 @@ mod tests {
 ###
   #
 ",
-            "\n".to_owned() + &variants
+            format!("\n{}", variants)
         );
     }
 
@@ -331,7 +331,7 @@ mod tests {
 # #
 ###
 ",
-            "\n".to_owned() + &variants
+            format!("\n{}", variants)
         );
     }
 
