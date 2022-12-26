@@ -3,6 +3,7 @@ use tictactoe::play::play_tictactoe;
 
 mod connect4;
 mod puzzlesolver;
+mod rubicscube;
 mod shared;
 mod tictactoe;
 
