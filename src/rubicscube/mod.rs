@@ -45,45 +45,9 @@ S----T----U
 
 use crate::shared::board::array_board::ArrayBoard;
 
-#[derive(Clone, Default)]
-struct Coord3 {
-    array: [i8; 3],
-}
+use self::coord3::Coord3;
 
-impl Coord3 {
-    fn x(&self) -> i8 {
-        self.array[0]
-    }
-    fn y(&self) -> i8 {
-        self.array[1]
-    }
-    fn z(&self) -> i8 {
-        self.array[2]
-    }
-
-    fn x_mut(&mut self) -> &mut i8 {
-        &mut self.array[0]
-    }
-    fn y_mut(&mut self) -> &mut i8 {
-        &mut self.array[1]
-    }
-    fn z_mut(&mut self) -> &mut i8 {
-        &mut self.array[2]
-    }
-
-    const fn new(x: i8, y: i8, z: i8) -> Coord3 {
-        Coord3 { array: [x, y, z] }
-    }
-}
-
-static UP: Coord3 = Coord3::new(1, 0, 0);
-static DOWN: Coord3 = Coord3::new(-1, 0, 0);
-
-static LEFT: Coord3 = Coord3::new(0, 1, 0);
-static RIGHT: Coord3 = Coord3::new(0, -1, 0);
-
-static FRONT: Coord3 = Coord3::new(0, 0, 1);
-static BACK: Coord3 = Coord3::new(0, 0, -1);
+mod coord3;
 
 struct Facet {
     board: ArrayBoard<3, 3, Color>,
@@ -92,7 +56,7 @@ struct Facet {
 impl Facet {
     pub fn new() -> Self {
         Self {
-            board: ArrayBoard::generate(|point| ' '),
+            board: ArrayBoard::generate(|_point| ' '),
         }
     }
 }
@@ -106,7 +70,7 @@ struct Cube {
 impl Cube {
     pub fn new() -> Self {
         Self {
-            facets: std::array::from_fn(|i| Facet::new()),
+            facets: std::array::from_fn(|_i| Facet::new()),
         }
     }
 
@@ -127,15 +91,15 @@ enum Xyz {
 
 #[cfg(test)]
 mod tests {
+    use crate::rubicscube::coord3;
     use crate::shared::board::board_get_set::BoardGet;
     use crate::shared::coord::point::Point;
 
     use super::Cube;
-    use super::UP;
 
     #[test]
     fn get_facet() {
         let cube = Cube::new();
-        assert_eq!(*cube.get(&UP).board.get(&Point::new(1, 1)), ' ');
+        assert_eq!(*cube.get(&coord3::UP).board.get(&Point::new(1, 1)), ' ');
     }
 }
