@@ -48,6 +48,8 @@ use crate::shared::board::array_board::ArrayBoard;
 use self::coord3::Coord3;
 
 mod coord3;
+mod facet;
+mod rubicks_point;
 
 struct Facet {
     board: ArrayBoard<3, 3, Color>,
