@@ -20,18 +20,18 @@ const ALL_FACETS: &[Facet] = &[
 ];
 
 impl Facet {
-    pub const fn opposite(self) -> Facet {
+    pub const fn opposite(self) -> Self {
         match self {
-            Facet::North => Facet::South,
-            Facet::South => Facet::North,
-            Facet::East => Facet::West,
-            Facet::West => Facet::East,
-            Facet::Top => Facet::Bottom,
-            Facet::Bottom => Facet::Top,
+            Self::North => Self::South,
+            Self::South => Self::North,
+            Self::East => Self::West,
+            Self::West => Self::East,
+            Self::Top => Self::Bottom,
+            Self::Bottom => Self::Top,
         }
     }
 
-    pub fn neighbors(self) -> impl Iterator<Item = Facet> {
+    pub fn neighbors(self) -> impl Iterator<Item = Self> {
         let opposite = self.opposite();
         ALL_FACETS
             .iter()
@@ -39,36 +39,40 @@ impl Facet {
             .filter(move |f| *f != opposite)
     }
 
-    pub fn pitch(self) -> Facet {
+    fn right(self) -> Self {
+        self
+    }
+
+    pub fn pitch(self) -> Self {
         match self {
-            Facet::North => Facet::Bottom,
-            Facet::South => Facet::Top,
-            Facet::East => Facet::East,
-            Facet::West => Facet::West,
-            Facet::Top => Facet::North,
-            Facet::Bottom => Facet::South,
+            Self::North => Self::Bottom,
+            Self::South => Self::Top,
+            Self::East => Self::East,
+            Self::West => Self::West,
+            Self::Top => Self::North,
+            Self::Bottom => Self::South,
         }
     }
 
-    pub fn yaw(self) -> Facet {
+    pub fn yaw(self) -> Self {
         match self {
-            Facet::North => Facet::East,
-            Facet::South => Facet::West,
-            Facet::East => Facet::South,
-            Facet::West => Facet::North,
-            Facet::Top => Facet::Top,
-            Facet::Bottom => Facet::Bottom,
+            Self::North => Self::East,
+            Self::South => Self::West,
+            Self::East => Self::South,
+            Self::West => Self::North,
+            Self::Top => Self::Top,
+            Self::Bottom => Self::Bottom,
         }
     }
 
-    pub fn roll(self) -> Facet {
+    pub fn roll(self) -> Self {
         match self {
-            Facet::North => Facet::North,
-            Facet::South => Facet::South,
-            Facet::East => Facet::Bottom,
-            Facet::West => Facet::Top,
-            Facet::Top => Facet::East,
-            Facet::Bottom => Facet::West,
+            Self::North => Self::North,
+            Self::South => Self::South,
+            Self::East => Self::Bottom,
+            Self::West => Self::Top,
+            Self::Top => Self::East,
+            Self::Bottom => Self::West,
         }
     }
 }
