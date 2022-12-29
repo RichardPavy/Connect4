@@ -68,7 +68,8 @@ impl<'state> SolverProgress<'state> {
                     .level_counts
                     .iter()
                     .enumerate()
-                    .map(|(i, count)| format!("Level:{i} = {count}"))
+                    .map(|(i, count)| (i + 1, count))
+                    .map(|(level, count)| format!("Level:{level} = {count}"))
                     .collect::<Vec<String>>()
                     .join(", ")
             );
@@ -91,6 +92,6 @@ impl<'state> SolverProgress<'state> {
 
 impl<'state> Drop for SolverProgress<'state> {
     fn drop(&mut self) {
-        self.state.level_counts.pop().unwrap();
+        self.state.level_counts.pop();
     }
 }
