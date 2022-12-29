@@ -1,6 +1,7 @@
 use std::ops::Deref;
 use std::ops::DerefMut;
 use std::ops::Drop;
+use std::time::Duration;
 
 use crate::shared::board::array_board::ArrayBoard;
 use crate::shared::board::board_get_set::BoardGet;
@@ -97,10 +98,20 @@ impl Board {
             .iter()
             .map(|sprite| Shape::parse(sprite).variants())
             .collect();
-        return Solution::Solution(self.solve_puzzle_rec(&shapes).unwrap());
+        {
+            let shapes_count = shapes.len();
+            let variants_count: usize = shapes.iter().map(|v| v.len()).sum();
+            println!("Got {shapes_count} shapes with {variants_count} variants");
+        }
+        let mut attempts = AttemptStatus::new();
+        return Solution::Solution(self.solve_puzzle_rec(&shapes, &mut attempts).unwrap());
     }
 
-    fn solve_puzzle_rec(&mut self, shapes: &[Vec<Shape>]) -> Option<Vec<(Shape, Point)>> {
+    fn solve_puzzle_rec(
+        &mut self,
+        shapes: &[Vec<Shape>],
+        attempts: &mut AttemptStatus,
+    ) -> Option<Vec<(Shape, Point)>> {
         if shapes.is_empty() {
             return Some(vec![]);
         }
@@ -110,8 +121,9 @@ impl Board {
             for i in 0..=(size.width() - variant.width()) {
                 for j in 0..=(size.height() - variant.height()) {
                     let at = Point::new(i, j);
+                    attempts.incr();
                     if let Some(mut self2) = self.matches(variant, &at) {
-                        if let Some(mut solution) = self2.solve_puzzle_rec(&shapes[1..]) {
+                        if let Some(mut solution) = self2.solve_puzzle_rec(&shapes[1..], attempts) {
                             solution.push((variant.clone(), at));
                             return Some(solution);
                         }
@@ -162,6 +174,32 @@ impl<'t> Drop for TryVariant<'t> {
     fn drop(&mut self) {
         for tagged_point in &self.shape.tagged_points {
             *self.board.get_mut(&(*tagged_point.as_point() + *self.at)) = tagged_point.color();
+        }
+    }
+}
+
+struct AttemptStatus {
+    attempts: u64,
+    last_printed: std::time::Instant,
+}
+
+impl AttemptStatus {
+    fn new() -> Self {
+        Self {
+            attempts: 0,
+            last_printed: std::time::Instant::now(),
+        }
+    }
+
+    fn incr(&mut self) {
+        self.attempts += 1;
+        if self.attempts % 100_000 == 0 {
+            let now = std::time::Instant::now();
+            if now.duration_since(self.last_printed) > Duration::from_secs(1) {
+                let attempts_billions = self.attempts as f64 / 1_000_000_000.;
+                println!("{attempts_billions} billion attempts so far...");
+                self.last_printed = now;
+            }
         }
     }
 }
