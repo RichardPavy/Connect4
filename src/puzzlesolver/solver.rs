@@ -10,6 +10,7 @@ use crate::shared::coord::point::Point;
 use super::shape::Shape;
 use super::solution::Solution;
 use super::solver_progress::SolverProgress;
+use super::solver_progress::SolverProgressState;
 
 impl<TBoard: BoardGet<Value = char> + BoardSet<Value = char> + BoardSize + std::fmt::Display> Puzzle
     for TBoard
@@ -29,8 +30,10 @@ pub trait Puzzle:
             let variants_count: usize = shapes.iter().map(|v| v.len()).sum();
             println!("Got {shapes_count} shapes with {variants_count} variants");
         }
-        let mut progress = SolverProgress::new();
-        let positioned_shapes = solve_puzzle_rec(self, &shapes, true, &mut progress).unwrap();
+        let mut progress_state = SolverProgressState::new();
+        let mut progress = SolverProgress::new(&mut progress_state);
+        let positioned_shapes =
+            solve_puzzle_rec(self, &shapes, true, &mut progress.enter()).unwrap();
         return Solution::of(positioned_shapes, progress.count());
     }
 }
@@ -53,7 +56,7 @@ fn solve_puzzle_rec(
                 progress.incr(puzzle);
                 if let Some(mut puzzle) = matches(puzzle, variant, &at, first, progress) {
                     if let Some(mut solution) =
-                        solve_puzzle_rec(&mut *puzzle, &shapes[1..], false, progress)
+                        solve_puzzle_rec(&mut *puzzle, &shapes[1..], false, &mut progress.enter())
                     {
                         solution.push((variant.clone(), at));
                         return Some(solution);
