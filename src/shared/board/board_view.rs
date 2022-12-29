@@ -47,6 +47,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::shared::board::array_board::ArrayBoard;
+    use crate::shared::board::board_generate::BoardGenerate;
 
     #[test]
     fn to_string() {

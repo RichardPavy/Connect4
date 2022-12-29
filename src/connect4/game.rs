@@ -2,8 +2,6 @@ use lazy_static::lazy_static;
 
 use crate::shared::board::board_get_set::BoardGet;
 use crate::shared::board::board_get_set::BoardSet;
-use crate::shared::board::board_iterate::ro::BoardIterate;
-use crate::shared::board::board_iterate::rw::BoardIterateMut;
 use crate::shared::board::board_lines::BoardLines;
 use crate::shared::board::board_size::BoardSize;
 use crate::shared::coord::directions;
@@ -35,7 +33,9 @@ impl<const WIDTH: usize, const HEIGHT: usize> Connect4<WIDTH, HEIGHT> {
         }
     }
 
+    #[cfg(test)]
     pub fn get_dropped_pos(&self, column: i32) -> Option<DroppedPos> {
+        use crate::shared::board::board_iterate::ro::BoardIterate;
         self.iterate(Point::new(column, self.height() - 1), directions::DOWN)
             .filter(|(_, cell)| cell.symbol == Symbol::Empty)
             .next()
@@ -46,6 +46,7 @@ impl<const WIDTH: usize, const HEIGHT: usize> Connect4<WIDTH, HEIGHT> {
     }
 
     pub fn get_dropped_pos_mut(&mut self, column: i32) -> Option<DroppedPosMut> {
+        use crate::shared::board::board_iterate::rw::BoardIterateMut;
         self.iterate_mut(Point::new(column, self.height() - 1), directions::DOWN)
             .filter(|(_, cell)| cell.symbol == Symbol::Empty)
             .next()
@@ -121,12 +122,6 @@ impl PlayColumn {
 struct Score {
     score: i32,
     end_of_game: bool,
-}
-
-impl Score {
-    fn new(score: i32, end_of_game: bool) -> Self {
-        Self { score, end_of_game }
-    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -329,11 +324,17 @@ mod tests {
             })
             .unwrap();
         assert_eq!(
-            Score::new(1240000, true),
+            Score {
+                score: 1240000,
+                end_of_game: true
+            },
             board.eval_position(Symbol::Red, pos2b)
         );
         assert_eq!(
-            Score::new(0, false),
+            Score {
+                score: 0,
+                end_of_game: false
+            },
             board.eval_position(Symbol::Yellow, pos2b)
         );
 

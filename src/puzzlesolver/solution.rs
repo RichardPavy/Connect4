@@ -1,22 +1,36 @@
 use std::fmt::Display;
+use std::marker::PhantomData;
 
+use crate::shared::board::board_generate::BoardGenerate;
 use crate::shared::coord::point::Point;
 
 use super::shape::Shape;
-use super::Board;
+use super::solver::Puzzle;
 
-pub enum Solution {
-    Solution(Vec<(Shape, Point)>),
+pub struct Solution<TPuzzle: Puzzle> {
+    positioned_shapes: Vec<(Shape, Point)>,
+    _phantom: PhantomData<TPuzzle>,
 }
 
-impl Display for Solution {
+impl<TPuzzle: Puzzle> Solution<TPuzzle> {
+    pub fn of(positioned_shapes: Vec<(Shape, Point)>) -> Self {
+        Self {
+            positioned_shapes,
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<TPuzzle: Puzzle + BoardGenerate<Value = char>> Display for Solution<TPuzzle> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Solution::Solution(shapes) = self;
-        for (i, (shape, at)) in shapes.iter().enumerate() {
+        let Self {
+            positioned_shapes, ..
+        } = self;
+        for (i, (shape, at)) in positioned_shapes.iter().enumerate() {
             if i != 0 {
                 writeln!(f)?;
             };
-            let board = Board::generate(|point| {
+            let board = TPuzzle::generate(|point| {
                 if let Some(color) = shape
                     .tagged_points
                     .iter()

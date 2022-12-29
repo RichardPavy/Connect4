@@ -68,6 +68,7 @@ impl Shape {
         self.size = Size::new(self.height(), self.width());
     }
 
+    #[cfg(test)]
     pub fn rotate_right(&mut self) {
         let height = self.height();
         for point in &mut self.tagged_points {
@@ -83,6 +84,7 @@ impl Shape {
         }
     }
 
+    #[cfg(test)]
     pub fn mirror_y(&mut self) {
         let height = self.height();
         for point in &mut self.tagged_points {

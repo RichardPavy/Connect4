@@ -25,6 +25,8 @@ impl TaggedPoint {
             color,
         }
     }
+
+    #[cfg(test)]
     pub fn new_pound(x: i32, y: i32) -> Self {
         Self::new(x, y, '#')
     }

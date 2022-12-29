@@ -6,6 +6,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 
 use crate::shared::board::board_all_points::BoardAllPoints;
+use crate::shared::board::board_generate::BoardGenerate;
 use crate::shared::board::board_get_set::BoardGet;
 use crate::shared::board::board_get_set::BoardSet;
 use crate::shared::board::board_size::BoardSize;

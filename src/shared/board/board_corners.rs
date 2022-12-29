@@ -93,6 +93,7 @@ mod tests {
 
     use crate::shared::board::array_board::ArrayBoard;
     use crate::shared::board::board_corners::BoardCorners;
+    use crate::shared::board::board_generate::BoardGenerate;
     use crate::shared::board::board_get_set::BoardSet;
     use crate::shared::coord::point::Point;
 
