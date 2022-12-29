@@ -10,7 +10,7 @@ pub enum Facet {
     Bottom,
 }
 
-const ALL_FACETS: &[Facet] = &[
+pub const ALL_FACETS: &[Facet] = &[
     Facet::North,
     Facet::South,
     Facet::East,
@@ -37,10 +37,6 @@ impl Facet {
             .iter()
             .map(|f| *f)
             .filter(move |f| *f != opposite)
-    }
-
-    fn right(self) -> Self {
-        self
     }
 
     pub fn pitch(self) -> Self {
@@ -130,5 +126,32 @@ mod tests {
             (Bottom, West),
         ];
         assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn neighbors() {
+        for facet in ALL_FACETS {
+            assert!(facet
+                .neighbors()
+                .collect::<Vec<Facet>>()
+                .contains(&facet.pitch()));
+            assert!(facet
+                .neighbors()
+                .collect::<Vec<Facet>>()
+                .contains(&facet.yaw()));
+            assert!(facet
+                .neighbors()
+                .collect::<Vec<Facet>>()
+                .contains(&facet.roll()));
+        }
+    }
+
+    #[test]
+    fn circular() {
+        for facet in ALL_FACETS {
+            assert_eq!(*facet, facet.pitch().pitch().pitch().pitch());
+            assert_eq!(*facet, facet.yaw().yaw().yaw().yaw());
+            assert_eq!(*facet, facet.roll().roll().roll().roll());
+        }
     }
 }
