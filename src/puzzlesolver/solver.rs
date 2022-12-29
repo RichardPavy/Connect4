@@ -30,13 +30,15 @@ pub trait Puzzle:
             println!("Got {shapes_count} shapes with {variants_count} variants");
         }
         let mut progress = SolverProgress::new();
-        return Solution::of(solve_puzzle_rec(self, &shapes, &mut progress).unwrap());
+        let positioned_shapes = solve_puzzle_rec(self, &shapes, true, &mut progress).unwrap();
+        return Solution::of(positioned_shapes, progress.count());
     }
 }
 
 fn solve_puzzle_rec(
     puzzle: &mut impl Puzzle,
     shapes: &[Vec<Shape>],
+    first: bool,
     progress: &mut SolverProgress,
 ) -> Option<Vec<(Shape, Point)>> {
     if shapes.is_empty() {
@@ -48,10 +50,10 @@ fn solve_puzzle_rec(
         for i in 0..=(size.width() - variant.width()) {
             for j in 0..=(size.height() - variant.height()) {
                 let at = Point::new(i, j);
-                progress.incr();
-                if let Some(mut puzzle) = matches(puzzle, variant, &at) {
+                progress.incr(puzzle);
+                if let Some(mut puzzle) = matches(puzzle, variant, &at, first, progress) {
                     if let Some(mut solution) =
-                        solve_puzzle_rec(puzzle.deref_mut(), &shapes[1..], progress)
+                        solve_puzzle_rec(&mut *puzzle, &shapes[1..], false, progress)
                     {
                         solution.push((variant.clone(), at));
                         return Some(solution);
@@ -67,16 +69,37 @@ fn matches<'t, TPuzzle: Puzzle>(
     puzzle: &'t mut TPuzzle,
     shape: &'t Shape,
     at: &'t Point,
+    first: bool,
+    progress: &mut SolverProgress,
 ) -> Option<TryVariant<'t, TPuzzle>> {
     for tagged_point in &shape.tagged_points {
         if *puzzle.get(&(*tagged_point.as_point() + *at)) != tagged_point.color() {
             return None;
         }
     }
+    use crate::shared::coord::directions;
+    const CORNERS: &[Point] = &[
+        directions::UP,
+        directions::DOWN,
+        directions::LEFT,
+        directions::RIGHT,
+    ];
+    if !first
+        && !shape
+            .tagged_points
+            .iter()
+            .map(|tagged_point| tagged_point.as_point())
+            .flat_map(|point| CORNERS.iter().map(|direction| *direction + *point + *at))
+            .filter(|point| puzzle.is_valid(point))
+            .any(|point| *puzzle.get(&point) == ' ')
+    {
+        progress.incr_pruned(puzzle);
+        return None;
+    }
     for tagged_point in &shape.tagged_points {
         *puzzle.get_mut(&(*tagged_point.as_point() + *at)) = ' ';
     }
-    Some(TryVariant { puzzle, shape, at })
+    return Some(TryVariant { puzzle, shape, at });
 }
 
 struct TryVariant<'t, TPuzzle: Puzzle> {
@@ -159,6 +182,8 @@ mod tests {
         println!("{}", solution);
         assert_eq!(
             "
+Found solution after 34 iterations.
+
     | 1 | 2 | 3 | 4 
 ----+---+---+---+---
  A  |   |   |   |   

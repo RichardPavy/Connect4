@@ -9,13 +9,15 @@ use super::solver::Puzzle;
 
 pub struct Solution<TPuzzle: Puzzle> {
     positioned_shapes: Vec<(Shape, Point)>,
+    iterations: u64,
     _phantom: PhantomData<TPuzzle>,
 }
 
 impl<TPuzzle: Puzzle> Solution<TPuzzle> {
-    pub fn of(positioned_shapes: Vec<(Shape, Point)>) -> Self {
+    pub fn of(positioned_shapes: Vec<(Shape, Point)>, iterations: u64) -> Self {
         Self {
             positioned_shapes,
+            iterations,
             _phantom: PhantomData,
         }
     }
@@ -23,6 +25,8 @@ impl<TPuzzle: Puzzle> Solution<TPuzzle> {
 
 impl<TPuzzle: Puzzle + BoardGenerate<Value = char>> Display for Solution<TPuzzle> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "Found solution after {} iterations.", self.iterations)?;
+        writeln!(f)?;
         let Self {
             positioned_shapes, ..
         } = self;
