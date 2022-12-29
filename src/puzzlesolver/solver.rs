@@ -9,6 +9,7 @@ use crate::shared::coord::point::Point;
 
 use super::shape::Shape;
 use super::solution::Solution;
+use super::solver_progress::ShapesStatus;
 use super::solver_progress::SolverProgress;
 use super::solver_progress::SolverProgressState;
 
@@ -30,10 +31,10 @@ pub trait Puzzle:
             let variants_count: usize = shapes.iter().map(|v| v.len()).sum();
             println!("Got {shapes_count} shapes with {variants_count} variants");
         }
-        let mut progress_state = SolverProgressState::new();
+        let mut progress_state = SolverProgressState::new(ShapesStatus::of(&shapes));
         let mut progress = SolverProgress::new(&mut progress_state);
         let positioned_shapes =
-            solve_puzzle_rec(self, &shapes, true, &mut progress.enter()).unwrap();
+            solve_puzzle_rec(self, &shapes, true, &mut progress, Point::new(0, 0)).unwrap();
         return Solution::of(positioned_shapes, progress.count());
     }
 }
@@ -43,29 +44,53 @@ fn solve_puzzle_rec(
     shapes: &[Vec<Shape>],
     first: bool,
     progress: &mut SolverProgress,
+    position_to_fill: Point,
 ) -> Option<Vec<(Shape, Point)>> {
-    if shapes.is_empty() {
+    if progress.finish() {
         return Some(vec![]);
     }
+    let position_to_fill = get_position_to_fill(puzzle, position_to_fill);
     let size = puzzle.size();
-    let shape = &shapes[0];
-    for variant in shape {
-        for i in 0..=(size.width() - variant.width()) {
-            for j in 0..=(size.height() - variant.height()) {
-                let at = Point::new(i, j);
-                progress.incr(puzzle);
-                if let Some(mut puzzle) = matches(puzzle, variant, &at, first, progress) {
-                    if let Some(mut solution) =
-                        solve_puzzle_rec(&mut *puzzle, &shapes[1..], false, &mut progress.enter())
+    for (shape_idx, variants) in shapes.iter().enumerate() {
+        if progress.shapes_used()[shape_idx] {
+            continue;
+        }
+        for variant in variants {
+            for i in 0..=(size.width() - variant.width()) {
+                for j in 0..=(size.height() - variant.height()) {
+                    let at = Point::new(i, j);
+                    progress.incr(puzzle);
+                    if let Some(mut puzzle) =
+                        matches(puzzle, variant, &at, first, progress, position_to_fill)
                     {
-                        solution.push((variant.clone(), at));
-                        return Some(solution);
-                    }
-                };
+                        if let Some(mut solution) = solve_puzzle_rec(
+                            &mut *puzzle,
+                            shapes,
+                            false,
+                            &mut progress.enter(shape_idx),
+                            position_to_fill,
+                        ) {
+                            solution.push((variant.clone(), at));
+                            return Some(solution);
+                        }
+                    };
+                }
             }
         }
     }
     return None;
+}
+
+fn get_position_to_fill(puzzle: &impl Puzzle, position_to_fill: Point) -> Point {
+    for i in position_to_fill.x..puzzle.width() {
+        for j in position_to_fill.y..puzzle.height() {
+            let pos = Point::new(i, j);
+            if *puzzle.get(&pos) != ' ' {
+                return pos;
+            }
+        }
+    }
+    position_to_fill
 }
 
 fn matches<'t, TPuzzle: Puzzle>(
@@ -74,11 +99,19 @@ fn matches<'t, TPuzzle: Puzzle>(
     at: &'t Point,
     first: bool,
     progress: &mut SolverProgress,
+    position_to_fill: Point,
 ) -> Option<TryVariant<'t, TPuzzle>> {
+    let mut position_is_filled = false;
     for tagged_point in &shape.tagged_points {
-        if *puzzle.get(&(*tagged_point.as_point() + *at)) != tagged_point.color() {
+        let point = *tagged_point.as_point() + *at;
+        if *puzzle.get(&point) != tagged_point.color() {
             return None;
         }
+        position_is_filled = position_is_filled || point == position_to_fill;
+    }
+    if !position_is_filled {
+        progress.incr_pruned(puzzle);
+        return None;
     }
     use crate::shared::coord::directions;
     const CORNERS: &[Point] = &[
@@ -87,17 +120,18 @@ fn matches<'t, TPuzzle: Puzzle>(
         directions::LEFT,
         directions::RIGHT,
     ];
-    if !first
-        && !shape
+    if !first {
+        if !shape
             .tagged_points
             .iter()
             .map(|tagged_point| tagged_point.as_point())
             .flat_map(|point| CORNERS.iter().map(|direction| *direction + *point + *at))
             .filter(|point| puzzle.is_valid(point))
             .any(|point| *puzzle.get(&point) == ' ')
-    {
-        progress.incr_pruned(puzzle);
-        return None;
+        {
+            progress.incr_pruned(puzzle);
+            return None;
+        }
     }
     for tagged_point in &shape.tagged_points {
         *puzzle.get_mut(&(*tagged_point.as_point() + *at)) = ' ';
