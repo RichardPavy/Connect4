@@ -1,18 +1,36 @@
 [alias] # command aliases
 b = "build"
+br = "build --release"
 c = "check"
 t = "test"
 r = "run"
 rr = "run --release"
 
 [build]
+########################
+# To compile without PGO
 rustflags = ["-C", "target-cpu=native"]
+#
+######################
+# To generate PGO data
+# rustflags = ["-C", "target-cpu=native", "-Cprofile-generate=/tmp/rust-pgo-data"]
+# Then run
+# ~/.rustup/toolchains/stable-x86_64-apple-darwin/lib/rustlib/x86_64-apple-darwin/bin/llvm-profdata merge -o ./puzzle_solver.profdata /tmp/rust-pgo-data
+#
+#####################
+# To compile with PGO
+# rustflags = [
+#     "-C",
+#     "target-cpu=native",
+#     "-Cprofile-use=/Users/richardpavy/Documents/GitHub/Connect4/puzzle_solver.profdata"
+# ]
 
 [profile.release] # Modify profile settings via config.
+codegen-units = 1
 opt-level = 3 # Optimization level.
 debug = false # Include debug info.
 debug-assertions = false # Enables debug assertions.
 overflow-checks = false # Enables runtime integer overflow checks.
 lto = "fat" # Sets link-time optimization.
-panic = 'abort' # The panic strategy.
+panic = "abort" # The panic strategy.
 incremental = true # Incremental compilation.

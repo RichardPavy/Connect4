@@ -68,9 +68,9 @@ fn solve_puzzle_rec(
         let shape_idx = shape_idx as ShapeIdx;
         for variant in variants {
             let x_min = (point_to_fill.x - variant.width() + 1).max(0);
-            let x_max = (point_to_fill.x + variant.width()).min(size.width() - variant.width());
+            let x_max = point_to_fill.x.min(size.width() - variant.width());
             let y_min = (point_to_fill.y - variant.height() + 1).max(0);
-            let y_max = (point_to_fill.y + variant.height()).min(size.height() - variant.height());
+            let y_max = point_to_fill.y.min(size.height() - variant.height());
             for i in x_min..=x_max {
                 for j in y_min..=y_max {
                     let at = Point::new(i, j);

@@ -16,7 +16,6 @@ pub(super) struct SolverProgressState {
     pruned: u64,
     last_iterations: u64,
     last_printed: time::Instant,
-    level_counts: Vec<u64>,
     shapes_status: ShapesStatus,
 }
 
@@ -27,7 +26,6 @@ impl SolverProgressState {
             pruned: 0,
             last_iterations: 0,
             last_printed: time::Instant::now(),
-            level_counts: vec![0],
             shapes_status,
         }
     }
@@ -61,7 +59,6 @@ impl<'state> SolverProgress<'state> {
 
     pub fn incr(&mut self, puzzle: &mut impl Puzzle) {
         self.state.iterations += 1;
-        *self.state.level_counts.last_mut().unwrap() += 1;
         self.show_if_necessary(puzzle);
     }
 
@@ -90,19 +87,11 @@ impl<'state> SolverProgress<'state> {
         let now = time::Instant::now();
         let since_last_printed = now.duration_since(state.last_printed);
         println!(
-            "{} iterations so far...    pruned:{}    QPS:{}/s   {}",
+            "{} iterations so far...    pruned:{}    QPS:{}/s",
             state.iterations.separate_with_spaces(),
             state.pruned.separate_with_spaces(),
             ((state.iterations - state.last_iterations) as f64 / since_last_printed.as_secs_f64())
                 .separate_with_spaces(),
-            state
-                .level_counts
-                .iter()
-                .enumerate()
-                .map(|(i, count)| (i + 1, count))
-                .map(|(level, count)| format!("Level:{level}={count}"))
-                .collect::<Vec<String>>()
-                .join(" / ")
         );
         println!("{}", puzzle);
     }
@@ -111,7 +100,6 @@ impl<'state> SolverProgress<'state> {
     where
         'parent: 'child,
     {
-        self.state.level_counts.push(0);
         self.state.shapes_status.remaining -= 1;
         self.shapes_used_mut()[shape_idx as usize] = true;
         SolverProgress {
@@ -136,7 +124,6 @@ impl<'state> SolverProgress<'state> {
 impl<'state> Drop for SolverProgress<'state> {
     fn drop(&mut self) {
         self.state.shapes_status.remaining += 1;
-        self.state.level_counts.pop();
         let shape_idx = self.shape_idx;
         self.shapes_used_mut()[shape_idx as usize] = false;
     }
