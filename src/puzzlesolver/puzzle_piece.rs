@@ -7,7 +7,7 @@ pub(super) enum PuzzlePiece {
     Shape { shape_idx: ShapeIdx },
 }
 
-pub(super) type ShapeIdx = u16;
+pub(super) type ShapeIdx = u32;
 
 impl PuzzlePiece {
     pub fn is_blank(&self) -> bool {
