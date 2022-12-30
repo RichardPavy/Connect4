@@ -220,7 +220,7 @@ mod tests {
         println!("{}", solution);
         assert_eq!(
             "
-Found solution after 20 iterations.
+Found solution after 15 iterations.
 
     | 1 | 2 | 3 | 4 
 ----+---+---+---+---

@@ -9,11 +9,11 @@ rr = "run --release"
 [build]
 ########################
 # To compile without PGO
-rustflags = ["-C", "target-cpu=native"]
+# rustflags = ["-Ctarget-cpu=native"]
 #
 ######################
 # 1. To generate PGO data
-# rustflags = ["-C", "target-cpu=native", "-Cprofile-generate=/tmp/rust-pgo-data"]
+# rustflags = ["-Ctarget-cpu=native", "-Cprofile-generate=/tmp/rust-pgo-data"]
 # 2. Then run the program long enough to generate enough profile data...
 #    Latency of PuzzleSolver is < 2ms with PGO
 # 3. Then run
@@ -22,12 +22,11 @@ rustflags = ["-C", "target-cpu=native"]
 #####################
 # To compile with PGO
 # rustflags = [
-#     "-C",
-#     "target-cpu=native",
+#     "-Ctarget-cpu=native",
 #     "-Cprofile-use=/Users/richardpavy/Documents/GitHub/Connect4/puzzle_solver.profdata"
 # ]
 
-[profile.release] # Modify profile settings via config.
+[profile.release]
 codegen-units = 1
 opt-level = 3 # Optimization level.
 debug = false # Include debug info.
