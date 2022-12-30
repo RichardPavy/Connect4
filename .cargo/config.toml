@@ -12,9 +12,11 @@ rr = "run --release"
 rustflags = ["-C", "target-cpu=native"]
 #
 ######################
-# To generate PGO data
+# 1. To generate PGO data
 # rustflags = ["-C", "target-cpu=native", "-Cprofile-generate=/tmp/rust-pgo-data"]
-# Then run
+# 2. Then run the program long enough to generate enough profile data...
+#    Latency of PuzzleSolver is < 2ms with PGO
+# 3. Then run
 # ~/.rustup/toolchains/stable-x86_64-apple-darwin/lib/rustlib/x86_64-apple-darwin/bin/llvm-profdata merge -o ./puzzle_solver.profdata /tmp/rust-pgo-data
 #
 #####################
