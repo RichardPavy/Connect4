@@ -7,6 +7,7 @@ use crate::shared::board::board_generate::BoardGenerate;
 use crate::shared::coord::point::Point;
 
 use super::puzzle_piece::PuzzlePiece;
+use super::puzzle_piece::ShapeIdx;
 use super::shape::Shape;
 use super::solver::Puzzle;
 
@@ -17,7 +18,7 @@ pub(super) struct Solution<TPuzzle: Puzzle> {
 }
 
 impl<TPuzzle: Puzzle> Solution<TPuzzle> {
-    pub fn of(mut positioned_shapes: Vec<(usize, Shape, Point)>, iterations: u64) -> Self {
+    pub fn of(mut positioned_shapes: Vec<(ShapeIdx, Shape, Point)>, iterations: u64) -> Self {
         positioned_shapes.sort_by_key(|(shape_idx, _shape, _at)| *shape_idx);
         Self {
             positioned_shapes: positioned_shapes

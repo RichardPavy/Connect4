@@ -4,8 +4,10 @@ use crate::shared::coord::point::Point;
 #[derive(Debug, PartialEq, Eq)]
 pub(super) enum PuzzlePiece {
     Blank { char: char },
-    Shape { shape_idx: usize },
+    Shape { shape_idx: ShapeIdx },
 }
+
+pub(super) type ShapeIdx = u16;
 
 impl PuzzlePiece {
     pub fn is_blank(&self) -> bool {
@@ -15,7 +17,7 @@ impl PuzzlePiece {
         }
     }
 
-    pub fn shape(shape_idx: usize) -> Self {
+    pub fn shape(shape_idx: ShapeIdx) -> Self {
         Self::Shape { shape_idx }
     }
 

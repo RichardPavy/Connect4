@@ -17,70 +17,9 @@ mod tagged_point;
 pub fn solve_puzzle() {
     type Board = ArrayBoard<8, 8, PuzzlePiece>;
     let start = time::Instant::now();
-    let sprites = [
-        "
-            O
-            XO
-             X
-        ",
-        "
-            O
-            X
-            OXO
-        ",
-        "
-            X
-            OX
-             OX
-        ",
-        "
-             O
-            OXOX
-        ",
-        "
-            O
-            XOX
-              O
-        ",
-        "
-            XOX
-             XO
-        ",
-        "
-            XOX
-              OX
-        ",
-        "
-            X
-        ",
-        "
-            X
-            OXO
-            X
-        ",
-        "
-            XO
-            OX
-        ",
-        "
-            OXOX
-               O
-        ",
-        "
-             O
-            OXO
-             O
-        ",
-        "
-            X X
-            OXO
-        ",
-        "
-            XOXOX
-        ",
-    ];
+
     let mut board = Board::generate(|point| PuzzlePiece::blank(point));
-    let solution = board.solve_puzzle(&sprites);
+    let solution = board.solve_puzzle(&SPRITES);
     println!("{}", solution);
     let end = time::Instant::now();
     println!(
@@ -88,3 +27,66 @@ pub fn solve_puzzle() {
         (end - start).as_micros().separate_with_spaces()
     );
 }
+
+const SPRITES: &[&str] = &[
+    "
+        O
+        XO
+         X
+    ",
+    "
+        O
+        X
+        OXO
+    ",
+    "
+        X
+        OX
+         OX
+    ",
+    "
+         O
+        OXOX
+    ",
+    "
+        O
+        XOX
+          O
+    ",
+    "
+        XOX
+         XO
+    ",
+    "
+        XOX
+          OX
+    ",
+    "
+        X
+    ",
+    "
+        X
+        OXO
+        X
+    ",
+    "
+        XO
+        OX
+    ",
+    "
+        OXOX
+           O
+    ",
+    "
+         O
+        OXO
+         O
+    ",
+    "
+        X X
+        OXO
+    ",
+    "
+        XOXOX
+    ",
+];

@@ -98,9 +98,10 @@ impl Shape {
         for _ in 0..2 {
             for _ in 0..4 {
                 shape.tagged_points.sort();
-                if !result.contains(&shape) {
-                    result.push(shape.clone());
+                if result.contains(&shape) {
+                    break;
                 }
+                result.push(shape.clone());
                 shape.rotate_left();
             }
             shape.mirror_x();

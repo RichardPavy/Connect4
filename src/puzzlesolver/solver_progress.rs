@@ -2,11 +2,13 @@ use std::time;
 
 use thousands::Separable;
 
+use crate::puzzlesolver::puzzle_piece::ShapeIdx;
+
 use super::solver::Puzzle;
 
 pub(super) struct SolverProgress<'state> {
     state: &'state mut SolverProgressState,
-    shape_idx: usize,
+    shape_idx: ShapeIdx,
 }
 
 pub(super) struct SolverProgressState {
@@ -69,7 +71,8 @@ impl<'state> SolverProgress<'state> {
     }
 
     fn show_if_necessary(&mut self, puzzle: &mut impl Puzzle) {
-        if self.state.iterations % 100_000 != 0 {
+        const SHOW_PROGRESS_MASK: u64 = (1 << 17) - 1;
+        if self.state.iterations & SHOW_PROGRESS_MASK != 0 {
             return;
         }
         let now = time::Instant::now();
@@ -104,13 +107,13 @@ impl<'state> SolverProgress<'state> {
         println!("{}", puzzle);
     }
 
-    pub fn enter<'parent, 'child>(&'parent mut self, shape_idx: usize) -> SolverProgress<'child>
+    pub fn enter<'parent, 'child>(&'parent mut self, shape_idx: ShapeIdx) -> SolverProgress<'child>
     where
         'parent: 'child,
     {
         self.state.level_counts.push(0);
         self.state.shapes_status.remaining -= 1;
-        self.shapes_used_mut()[shape_idx] = true;
+        self.shapes_used_mut()[shape_idx as usize] = true;
         SolverProgress {
             state: &mut self.state,
             shape_idx,
@@ -135,6 +138,6 @@ impl<'state> Drop for SolverProgress<'state> {
         self.state.shapes_status.remaining += 1;
         self.state.level_counts.pop();
         let shape_idx = self.shape_idx;
-        self.shapes_used_mut()[shape_idx] = false;
+        self.shapes_used_mut()[shape_idx as usize] = false;
     }
 }

@@ -8,6 +8,7 @@ use crate::shared::board::board_size::BoardSize;
 use crate::shared::coord::point::Point;
 
 use super::puzzle_piece::PuzzlePiece;
+use super::puzzle_piece::ShapeIdx;
 use super::shape::Shape;
 use super::solution::Solution;
 use super::solver_progress::ShapesStatus;
@@ -42,7 +43,8 @@ pub(super) trait Puzzle:
         }
         let mut progress_state = SolverProgressState::new(ShapesStatus::of(&shapes));
         let mut progress = SolverProgress::new(&mut progress_state);
-        let positioned_shapes = solve_puzzle_rec(self, &shapes, &mut progress).unwrap();
+        let positioned_shapes =
+            solve_puzzle_rec(self, &shapes, &mut progress, Point::new(0, 0)).unwrap();
         return Solution::of(positioned_shapes, progress.count());
     }
 }
@@ -51,28 +53,39 @@ fn solve_puzzle_rec(
     puzzle: &mut impl Puzzle,
     shapes: &[Vec<Shape>],
     progress: &mut SolverProgress,
-) -> Option<Vec<(usize, Shape, Point)>> {
+    point_to_fill: Point,
+) -> Option<Vec<(ShapeIdx, Shape, Point)>> {
     if progress.finish() {
         progress.print(puzzle);
         return Some(vec![]);
     }
-    let position_to_fill = get_position_to_fill(puzzle);
+    let point_to_fill = get_point_to_fill(puzzle, point_to_fill);
     let size = puzzle.size();
     for (shape_idx, variants) in shapes.iter().enumerate() {
         if progress.shapes_used()[shape_idx] {
             continue;
         }
+        let shape_idx = shape_idx as ShapeIdx;
         for variant in variants {
-            for i in 0..=(size.width() - variant.width()) {
-                for j in 0..=(size.height() - variant.height()) {
+            let x_min = (point_to_fill.x - variant.width() + 1).max(0);
+            let x_max = (point_to_fill.x + variant.width()).min(size.width() - variant.width());
+            let y_min = (point_to_fill.y - variant.height() + 1).max(0);
+            let y_max = (point_to_fill.y + variant.height()).min(size.height() - variant.height());
+            for i in x_min..=x_max {
+                for j in y_min..=y_max {
                     let at = Point::new(i, j);
                     progress.incr(puzzle);
                     if let Some(mut puzzle) =
-                        matches(puzzle, progress, position_to_fill, shape_idx, variant, &at)
+                        matches(puzzle, progress, point_to_fill, shape_idx, variant, &at)
                     {
-                        if let Some(mut solution) =
-                            solve_puzzle_rec(&mut *puzzle, shapes, &mut progress.enter(shape_idx))
-                        {
+                        #[cfg(test)]
+                        assert!(!puzzle.get(&point_to_fill).is_blank());
+                        if let Some(mut solution) = solve_puzzle_rec(
+                            &mut *puzzle,
+                            shapes,
+                            &mut progress.enter(shape_idx),
+                            point_to_fill,
+                        ) {
                             solution.push((shape_idx, variant.clone(), at));
                             return Some(solution);
                         }
@@ -84,8 +97,8 @@ fn solve_puzzle_rec(
     return None;
 }
 
-fn get_position_to_fill(puzzle: &impl Puzzle) -> Point {
-    for i in 0..puzzle.width() {
+fn get_point_to_fill(puzzle: &impl Puzzle, point_to_fill: Point) -> Point {
+    for i in point_to_fill.x..puzzle.width() {
         for j in 0..puzzle.height() {
             let pos = Point::new(i, j);
             if puzzle.get(&pos).is_blank() {
@@ -99,8 +112,8 @@ fn get_position_to_fill(puzzle: &impl Puzzle) -> Point {
 fn matches<'t, TPuzzle: Puzzle>(
     puzzle: &'t mut TPuzzle,
     progress: &mut SolverProgress,
-    position_to_fill: Point,
-    shape_idx: usize,
+    point_to_fill: Point,
+    shape_idx: ShapeIdx,
     shape: &'t Shape,
     at: &'t Point,
 ) -> Option<TryVariant<'t, TPuzzle>> {
@@ -110,7 +123,9 @@ fn matches<'t, TPuzzle: Puzzle>(
         if *puzzle.get(&point) != PuzzlePiece::blank_char(tagged_point.color()) {
             return None;
         }
-        position_is_filled = position_is_filled || point == position_to_fill;
+        if !position_is_filled && point == point_to_fill {
+            position_is_filled = true;
+        }
     }
     if !position_is_filled {
         progress.incr_pruned(puzzle);
