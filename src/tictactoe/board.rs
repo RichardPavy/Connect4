@@ -35,6 +35,7 @@ impl Board {
 
 #[cfg(test)]
 mod tests {
+    use crate::shared::board::board_generate::BoardGenerate;
     use crate::tictactoe::tictactoe::Symbol;
 
     use super::Board;

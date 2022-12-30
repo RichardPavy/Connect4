@@ -11,7 +11,10 @@ fn main() {
     let difficulty = 1;
     let winning_tokens = 4;
     loop {
-        println!("Type 't' for TicTacToe or 'c' for Connect4");
+        println!("Type:");
+        println!("- 't' for TicTacToe");
+        println!("- 'c' for Connect4");
+        println!("- 'p' for PuzzleSolver");
         let line = {
             let mut line = String::new();
             std::io::stdin().read_line(&mut line).unwrap();
@@ -22,6 +25,9 @@ fn main() {
             continue;
         } else if line == "c" {
             play_connect4(difficulty, winning_tokens).unwrap();
+            continue;
+        } else if line == "p" {
+            puzzlesolver::solve_puzzle();
             continue;
         } else if line == "q" {
             println!("Goodbye");

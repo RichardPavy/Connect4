@@ -1,6 +1,7 @@
 use lazy_static::lazy_static;
 
 use crate::shared::board::board_all_points::BoardAllPoints;
+use crate::shared::board::board_generate::BoardGenerate;
 use crate::shared::board::board_get_set::BoardGet;
 use crate::shared::board::board_get_set::BoardSet;
 use crate::shared::board::board_iterate::ro::BoardIterate;
@@ -166,7 +167,7 @@ impl Game {
 
 #[cfg(test)]
 mod tests {
-
+    use crate::shared::board::board_generate::BoardGenerate;
     use crate::shared::coord::point::Point;
 
     use super::*;

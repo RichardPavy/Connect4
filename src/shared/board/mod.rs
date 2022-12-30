@@ -9,6 +9,7 @@ pub mod array_board;
 pub mod board_all_points;
 pub mod board_corners;
 pub mod board_for_all_points;
+pub mod board_generate;
 pub mod board_get_set;
 pub mod board_iterate;
 pub mod board_lines;

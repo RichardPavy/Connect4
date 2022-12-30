@@ -1,4 +1,5 @@
 use crate::shared::board::array_board::ArrayBoard;
+use crate::shared::board::board_generate::BoardGenerate;
 use crate::shared::board::board_get_set::BoardGet;
 use crate::shared::board::board_get_set::BoardSet;
 use crate::shared::board::board_size::BoardSize;
