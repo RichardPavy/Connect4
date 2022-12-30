@@ -1,7 +1,9 @@
+use crate::puzzlesolver::puzzle_piece::PuzzlePiece;
 use crate::puzzlesolver::solver::Puzzle;
 use crate::shared::board::array_board::ArrayBoard;
 use crate::shared::board::board_generate::BoardGenerate;
 
+mod puzzle_piece;
 mod shape;
 mod solution;
 mod solver;
@@ -9,7 +11,7 @@ mod solver_progress;
 mod tagged_point;
 
 pub fn solve_puzzle() {
-    type Board = ArrayBoard<8, 8, char>;
+    type Board = ArrayBoard<8, 8, PuzzlePiece>;
     let sprites = [
         "
             O
@@ -72,13 +74,7 @@ pub fn solve_puzzle() {
             XOXOX
         ",
     ];
-    let mut board = Board::generate(|point| {
-        if (point.x + point.y) % 2 == 0 {
-            'X'
-        } else {
-            'O'
-        }
-    });
+    let mut board = Board::generate(|point| PuzzlePiece::blank(point));
     let solution = board.solve_puzzle(&sprites);
     println!("{}", solution);
 }

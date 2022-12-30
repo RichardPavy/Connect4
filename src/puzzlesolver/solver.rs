@@ -7,19 +7,28 @@ use crate::shared::board::board_get_set::BoardSet;
 use crate::shared::board::board_size::BoardSize;
 use crate::shared::coord::point::Point;
 
+use super::puzzle_piece::PuzzlePiece;
 use super::shape::Shape;
 use super::solution::Solution;
 use super::solver_progress::ShapesStatus;
 use super::solver_progress::SolverProgress;
 use super::solver_progress::SolverProgressState;
 
-impl<TBoard: BoardGet<Value = char> + BoardSet<Value = char> + BoardSize + std::fmt::Display> Puzzle
-    for TBoard
+impl<
+        TBoard: BoardGet<Value = PuzzlePiece>
+            + BoardSet<Value = PuzzlePiece>
+            + BoardSize
+            + std::fmt::Display,
+    > Puzzle for TBoard
 {
 }
 
-pub trait Puzzle:
-    BoardGet<Value = char> + BoardSet<Value = char> + BoardSize + std::fmt::Display + Sized
+pub(super) trait Puzzle:
+    BoardGet<Value = PuzzlePiece>
+    + BoardSet<Value = PuzzlePiece>
+    + BoardSize
+    + std::fmt::Display
+    + Sized
 {
     fn solve_puzzle(&mut self, sprites: &[&str]) -> Solution<Self> {
         let shapes: Vec<Vec<Shape>> = sprites
@@ -33,8 +42,7 @@ pub trait Puzzle:
         }
         let mut progress_state = SolverProgressState::new(ShapesStatus::of(&shapes));
         let mut progress = SolverProgress::new(&mut progress_state);
-        let positioned_shapes =
-            solve_puzzle_rec(self, &shapes, true, &mut progress, Point::new(0, 0)).unwrap();
+        let positioned_shapes = solve_puzzle_rec(self, &shapes, &mut progress).unwrap();
         return Solution::of(positioned_shapes, progress.count());
     }
 }
@@ -42,14 +50,13 @@ pub trait Puzzle:
 fn solve_puzzle_rec(
     puzzle: &mut impl Puzzle,
     shapes: &[Vec<Shape>],
-    first: bool,
     progress: &mut SolverProgress,
-    position_to_fill: Point,
-) -> Option<Vec<(Shape, Point)>> {
+) -> Option<Vec<(usize, Shape, Point)>> {
     if progress.finish() {
+        progress.print(puzzle);
         return Some(vec![]);
     }
-    let position_to_fill = get_position_to_fill(puzzle, position_to_fill);
+    let position_to_fill = get_position_to_fill(puzzle);
     let size = puzzle.size();
     for (shape_idx, variants) in shapes.iter().enumerate() {
         if progress.shapes_used()[shape_idx] {
@@ -61,16 +68,12 @@ fn solve_puzzle_rec(
                     let at = Point::new(i, j);
                     progress.incr(puzzle);
                     if let Some(mut puzzle) =
-                        matches(puzzle, variant, &at, first, progress, position_to_fill)
+                        matches(puzzle, progress, position_to_fill, shape_idx, variant, &at)
                     {
-                        if let Some(mut solution) = solve_puzzle_rec(
-                            &mut *puzzle,
-                            shapes,
-                            false,
-                            &mut progress.enter(shape_idx),
-                            position_to_fill,
-                        ) {
-                            solution.push((variant.clone(), at));
+                        if let Some(mut solution) =
+                            solve_puzzle_rec(&mut *puzzle, shapes, &mut progress.enter(shape_idx))
+                        {
+                            solution.push((shape_idx, variant.clone(), at));
                             return Some(solution);
                         }
                     };
@@ -81,30 +84,30 @@ fn solve_puzzle_rec(
     return None;
 }
 
-fn get_position_to_fill(puzzle: &impl Puzzle, position_to_fill: Point) -> Point {
-    for i in position_to_fill.x..puzzle.width() {
-        for j in position_to_fill.y..puzzle.height() {
+fn get_position_to_fill(puzzle: &impl Puzzle) -> Point {
+    for i in 0..puzzle.width() {
+        for j in 0..puzzle.height() {
             let pos = Point::new(i, j);
-            if *puzzle.get(&pos) != ' ' {
+            if puzzle.get(&pos).is_blank() {
                 return pos;
             }
         }
     }
-    position_to_fill
+    unreachable!()
 }
 
 fn matches<'t, TPuzzle: Puzzle>(
     puzzle: &'t mut TPuzzle,
-    shape: &'t Shape,
-    at: &'t Point,
-    first: bool,
     progress: &mut SolverProgress,
     position_to_fill: Point,
+    shape_idx: usize,
+    shape: &'t Shape,
+    at: &'t Point,
 ) -> Option<TryVariant<'t, TPuzzle>> {
     let mut position_is_filled = false;
     for tagged_point in &shape.tagged_points {
         let point = *tagged_point.as_point() + *at;
-        if *puzzle.get(&point) != tagged_point.color() {
+        if *puzzle.get(&point) != PuzzlePiece::blank_char(tagged_point.color()) {
             return None;
         }
         position_is_filled = position_is_filled || point == position_to_fill;
@@ -113,28 +116,9 @@ fn matches<'t, TPuzzle: Puzzle>(
         progress.incr_pruned(puzzle);
         return None;
     }
-    use crate::shared::coord::directions;
-    const CORNERS: &[Point] = &[
-        directions::UP,
-        directions::DOWN,
-        directions::LEFT,
-        directions::RIGHT,
-    ];
-    if !first {
-        if !shape
-            .tagged_points
-            .iter()
-            .map(|tagged_point| tagged_point.as_point())
-            .flat_map(|point| CORNERS.iter().map(|direction| *direction + *point + *at))
-            .filter(|point| puzzle.is_valid(point))
-            .any(|point| *puzzle.get(&point) == ' ')
-        {
-            progress.incr_pruned(puzzle);
-            return None;
-        }
-    }
     for tagged_point in &shape.tagged_points {
-        *puzzle.get_mut(&(*tagged_point.as_point() + *at)) = ' ';
+        let point = *tagged_point.as_point() + *at;
+        *puzzle.get_mut(&point) = PuzzlePiece::shape(shape_idx);
     }
     return Some(TryVariant { puzzle, shape, at });
 }
@@ -161,13 +145,20 @@ impl<'t, TPuzzle: Puzzle> DerefMut for TryVariant<'t, TPuzzle> {
 impl<'t, TPuzzle: Puzzle> Drop for TryVariant<'t, TPuzzle> {
     fn drop(&mut self) {
         for tagged_point in &self.shape.tagged_points {
-            *self.puzzle.get_mut(&(*tagged_point.as_point() + *self.at)) = tagged_point.color();
+            let point = *tagged_point.as_point() + *self.at;
+            #[cfg(test)]
+            assert_eq!(
+                PuzzlePiece::blank(&point),
+                PuzzlePiece::blank_char(tagged_point.color())
+            );
+            *self.puzzle.get_mut(&point) = PuzzlePiece::blank_char(tagged_point.color());
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::puzzlesolver::puzzle_piece::PuzzlePiece;
     use crate::puzzlesolver::solver::Puzzle;
     use crate::shared::board::array_board::ArrayBoard;
     use crate::shared::board::board_generate::BoardGenerate;
@@ -182,9 +173,9 @@ mod tests {
     //  O | O | M | M
     //
     // The sprites are:
-    // XO   XO   X   O    XO
-    //  X   O        X    OX
-    //  O            OX
+    // X O     X O     X     O       X O
+    //   X     O             X       O X
+    //   O                   O X
     #[test]
     fn solve_puzzle() {
         let sprites = [
@@ -208,18 +199,33 @@ mod tests {
                 XO
             ",
         ];
-        let mut board = ArrayBoard::<4, 4, char>::generate(|point| {
-            if (point.x + point.y) % 2 == 0 {
-                'X'
-            } else {
-                'O'
-            }
-        });
+        let mut board =
+            ArrayBoard::<4, 4, PuzzlePiece>::generate(|point| PuzzlePiece::blank(point));
         let solution = board.solve_puzzle(&sprites);
         println!("{}", solution);
         assert_eq!(
             "
-Found solution after 1532 iterations.
+Found solution after 50 iterations.
+
+    | 1 | 2 | 3 | 4 
+----+---+---+---+---
+ A  | X |   |   |   
+----+---+---+---+---
+ B  | O | X | O |   
+----+---+---+---+---
+ C  |   |   |   |   
+----+---+---+---+---
+ D  |   |   |   |   
+
+    | 1 | 2 | 3 | 4 
+----+---+---+---+---
+ A  |   |   |   |   
+----+---+---+---+---
+ B  |   |   |   |   
+----+---+---+---+---
+ C  | X | O |   |   
+----+---+---+---+---
+ D  | O |   |   |   
 
     | 1 | 2 | 3 | 4 
 ----+---+---+---+---
@@ -229,7 +235,17 @@ Found solution after 1532 iterations.
 ----+---+---+---+---
  C  |   |   |   |   
 ----+---+---+---+---
- D  |   |   |   | X 
+ D  |   | X |   |   
+
+    | 1 | 2 | 3 | 4 
+----+---+---+---+---
+ A  |   | O | X | O 
+----+---+---+---+---
+ B  |   |   |   | X 
+----+---+---+---+---
+ C  |   |   |   |   
+----+---+---+---+---
+ D  |   |   |   |   
 
     | 1 | 2 | 3 | 4 
 ----+---+---+---+---
@@ -239,37 +255,7 @@ Found solution after 1532 iterations.
 ----+---+---+---+---
  C  |   |   | X | O 
 ----+---+---+---+---
- D  |   |   | O |   
-
-    | 1 | 2 | 3 | 4 
-----+---+---+---+---
- A  |   |   | X | O 
-----+---+---+---+---
- B  |   |   | O | X 
-----+---+---+---+---
- C  |   |   |   |   
-----+---+---+---+---
- D  |   |   |   |   
-
-    | 1 | 2 | 3 | 4 
-----+---+---+---+---
- A  |   |   |   |   
-----+---+---+---+---
- B  | O |   |   |   
-----+---+---+---+---
- C  | X |   |   |   
-----+---+---+---+---
- D  | O | X |   |   
-
-    | 1 | 2 | 3 | 4 
-----+---+---+---+---
- A  | X | O |   |   
-----+---+---+---+---
- B  |   | X |   |   
-----+---+---+---+---
- C  |   | O |   |   
-----+---+---+---+---
- D  |   |   |   |   
+ D  |   |   | O | X 
 ",
             format!("\n{}", solution)
         );

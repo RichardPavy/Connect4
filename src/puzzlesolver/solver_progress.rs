@@ -69,34 +69,39 @@ impl<'state> SolverProgress<'state> {
     }
 
     fn show_if_necessary(&mut self, puzzle: &mut impl Puzzle) {
-        let state = &mut self.state;
-        if state.iterations % 100_000 != 0 {
+        if self.state.iterations % 100_000 != 0 {
             return;
         }
-
         let now = time::Instant::now();
-        let since_last_printed = now.duration_since(state.last_printed);
+        let since_last_printed = now.duration_since(self.state.last_printed);
         if since_last_printed > time::Duration::from_secs(1) {
-            println!(
-                "{} iterations so far...    pruned:{}    QPS:{}/s   {}",
-                state.iterations.separate_with_spaces(),
-                state.pruned.separate_with_spaces(),
-                ((state.iterations - state.last_iterations) as f64
-                    / since_last_printed.as_secs_f64())
-                .separate_with_spaces(),
-                state
-                    .level_counts
-                    .iter()
-                    .enumerate()
-                    .map(|(i, count)| (i + 1, count))
-                    .map(|(level, count)| format!("Level:{level}={count}"))
-                    .collect::<Vec<String>>()
-                    .join(" / ")
-            );
-            println!("{}", puzzle);
+            self.print(puzzle);
+            let state = &mut self.state;
             state.last_printed = now;
             state.last_iterations = state.iterations;
         }
+    }
+
+    pub fn print(&mut self, puzzle: &mut impl Puzzle) {
+        let state = &mut self.state;
+        let now = time::Instant::now();
+        let since_last_printed = now.duration_since(state.last_printed);
+        println!(
+            "{} iterations so far...    pruned:{}    QPS:{}/s   {}",
+            state.iterations.separate_with_spaces(),
+            state.pruned.separate_with_spaces(),
+            ((state.iterations - state.last_iterations) as f64 / since_last_printed.as_secs_f64())
+                .separate_with_spaces(),
+            state
+                .level_counts
+                .iter()
+                .enumerate()
+                .map(|(i, count)| (i + 1, count))
+                .map(|(level, count)| format!("Level:{level}={count}"))
+                .collect::<Vec<String>>()
+                .join(" / ")
+        );
+        println!("{}", puzzle);
     }
 
     pub fn enter<'parent, 'child>(&'parent mut self, shape_idx: usize) -> SolverProgress<'child>
