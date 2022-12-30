@@ -1,3 +1,5 @@
+use std::time;
+
 use crate::puzzlesolver::puzzle_piece::PuzzlePiece;
 use crate::puzzlesolver::solver::Puzzle;
 use crate::shared::board::array_board::ArrayBoard;
@@ -12,6 +14,7 @@ mod tagged_point;
 
 pub fn solve_puzzle() {
     type Board = ArrayBoard<8, 8, PuzzlePiece>;
+    let start = time::Instant::now();
     let sprites = [
         "
             O
@@ -77,4 +80,6 @@ pub fn solve_puzzle() {
     let mut board = Board::generate(|point| PuzzlePiece::blank(point));
     let solution = board.solve_puzzle(&sprites);
     println!("{}", solution);
+    let end = time::Instant::now();
+    println!("{} millis", (end - start).as_millis());
 }
