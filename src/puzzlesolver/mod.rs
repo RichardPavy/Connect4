@@ -1,5 +1,7 @@
 use std::time;
 
+use thousands::Separable;
+
 use crate::puzzlesolver::puzzle_piece::PuzzlePiece;
 use crate::puzzlesolver::solver::Puzzle;
 use crate::shared::board::array_board::ArrayBoard;
@@ -81,5 +83,8 @@ pub fn solve_puzzle() {
     let solution = board.solve_puzzle(&sprites);
     println!("{}", solution);
     let end = time::Instant::now();
-    println!("{} millis", (end - start).as_millis());
+    println!(
+        "{} micros",
+        (end - start).as_micros().separate_with_spaces()
+    );
 }
